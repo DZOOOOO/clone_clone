@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const cors = require('cors')
 const userRouters = require('./routes/user')
 const postRouters = require('./routes/post')
 const commentRouters = require('./routes/comment')
@@ -7,6 +8,7 @@ const commentRouters = require('./routes/comment')
 // 미들웨어
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
+app.use(cors())
 app.use(express.static("static"))
 
 // 라우터
