@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>join</title>
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script>
+        // 회원가입 버튼 함수
+        function join() {
+            // 유저가 입력한 값 가져오기
+            let user_email = $('#input-email').val()
+            let nickname = $('#input-nickname').val()
+            let password = $('#input-password').val()
+            let confirmPassword = $('#confirm-password').val()
+
+            // 회원가입 아이디/비밀번호 조건식
+            // 아이디
+            // let regExp = /^[a-z]+[a-z0-9]{5,19}$/g;
+            // if (userID.length < 6 || regExp.test(userID) === false) {
+            //         return alert('아이디는 최소 6자 이상,  알파벳 숫자 섞어서 작성해주세요.')
+            // }
+            // // 비밀번호
+            // if (password.length < 4 || password.includes(nickName) === true) {
+            //     return alert('비밀번호는 최소 4자 이상 닉네임을 포함하면 안됩니다.')
+            // }
+            if (password !== confirmPassword) return alert('비밀번호가 다릅니다.')
+
+            // POST API
+            $.ajax({
+                type: "POST",
+                url: "/join",
+                data: {
+                    email : user_email,
+                    nickname: nickname,
+                    password: password,
+                },
+                success: function (response) { // 성공하면
+                    alert(response['msg'])
+                    location.href = '/login.html'
+                },
+                error: function (xhr) {
+                    if (xhr.status === 400) {
+                        alert(xhr.responseJSON.errorMessage)
+                    }
+                },
+            })
+        }
+        // 아이디 중복체크 버튼 함수
+        function check() {
+            let userID = $('#input-userID').val()
+            if (userID === '') return alert('아이디를 입력해 주세요.!')
+            $.ajax({
+                type: "POST",
+                url: "/api/check",
+                data: {
+                    userID : userID,
+                },
+                success: function (response) { // 성공하면
+                    console.log(response)
+                    alert(response['msg'])
+                },
+                error: function (xhr) {
+                    if (xhr.status === 400) {
+                        alert(xhr.responseJSON.errorMessage)
+                    }
+                },
+            })
+        }
+    </script>
+</head>
+<body>
+    <div class="box">
+        <div class="field">
+            <label class="label">유저 이메일</label>
+            <div class="control">
+                <input class="input" type="text" id="input-email">
+<!--                <button class="button is-primary is-outlined" onclick="check()">이메일 중복체크</button>-->
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">닉네임</label>
+            <div class="control">
+                <input class="input" type="text" id="input-nickname">
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">비밀번호</label>
+            <div class="control">
+                <input class="input" type="password" id="input-password" placeholder="최소4자 이상 닉네임 포함 하지마세요..">
+            </div>
+        </div>
+        <div class="field">
+            <label class="label">비밀번호 확인</label>
+            <div class="control">
+                <input class="input" id="confirm-password" type="password">
+            </div>
+        </div>
+        <button class="button is-primary is-outlined" onclick="join()">회원가입</button>
+        <button class="button is-outlined" onclick="window.location.replace('/')">취소</button>
+    </div>
+</body>
+</html>

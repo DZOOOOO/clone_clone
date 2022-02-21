@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script>
+        // 로그인 함수
+        function login() {
+            // 유저가 입력한 값 가져오기
+            let user_email = $('#input-email').val()
+            let password = $('#input-password').val()
+
+            // POST API
+            $.ajax({
+                type: "POST",
+                url: "/login",
+                data: {
+                    email: user_email,
+                    password: password,
+                },
+                success: function (response) { // 성공하면
+                    localStorage.setItem('token', response.token)
+                    alert(response['msg'])
+                    location.href = '/'
+                },
+                error: function (xhr) {
+                    if (xhr.status === 400) {
+                        alert(xhr.responseJSON.errorMessage)
+                    }
+                },
+            })
+        }
+    </script>
+</head>
+<body>
+<div class="box">
+    <div class="field">
+        <label class="label">유저 email</label>
+        <div class="control">
+            <input class="input" id="input-email" placeholder="아이디 입력해주세요.">
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="label">비밀번호</label>
+        <div class="control">
+            <input class="input" id="input-password" type="password" placeholder="********">
+        </div>
+    </div>
+    <button class="button is-primary" onclick="login()">로그인</button>
+    <button class="button is-outlined" onclick="window.location.replace('/')">취소</button>
+</div>
+</body>
+</html>

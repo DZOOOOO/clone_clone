@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .box {
+            margin: auto;
+            width: 800px;
+        }
+
+        .comment-btn {
+            display: flex;
+        }
+    </style>
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script>
+        // query String 받아오기
+        const queryString = window.location.search
+        const urlParams = new URLSearchParams(queryString)
+        const post_id = urlParams.get('post_id')
+
+        $(document).ready(function () {
+            showArticle()
+            showComment()
+        })
+
+        // 로그인 안하고 댓글창 누를경우
+        function checkLogin() {
+            if (localStorage.getItem('token') === null) return alert('로그인 하고 사용해주세요.')
+        }
+
+        //게시글 보여주기
+        function showArticle() {
+            $.ajax({
+                type: 'GET',
+                url: `post/${post_id}`,
+                headers: {
+                    authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                success: function (response) {
+                    let detail_post = response['detail_post']
+                    let user = response['email']
+                    let title = detail_post['title']
+                    let content = detail_post['content']
+                    let img_url = detail_post['img_url']
+                    let temp_html = ``
+                    temp_html = `
+                                    <div>
+                                        <div class="field">
+                                            <label class="label">제목</label>
+                                            <div class="control">
+                                                <h1>${title}</h1>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="field">
+                                            <label class="label">작성자</label>
+                                            <div class="control">
+                                                <h1>${user}</h1>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="field">
+                                            <label class="label">사진</label>
+                                            <div class="control">
+                                                <img src="${img_url}">
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="field">
+                                            <label class="label">내용</label>
+                                            <div class="control">
+                                               ${content}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                        <div class="btn-box">
+                                            <button class="button is-outlined" onclick="window.location.replace('/')">목록</button>
+                                            <button class="button is-outlined" onclick="window.location.replace('/editDetail.html?post_id=${post_id}')">수정</button>
+                                            <button class="button is-outlined" onclick="deleteArticle()">삭제</button>
+                                        </div>
+                                    `
+                    $('#content-box').append(temp_html)
+                }
+            })
+        }
+
+
+        // 게시글 삭제
+        function deleteArticle() {
+            if (confirm('삭제 하시겠습니까?')) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `/post/${post_id}`,
+                    data: {},
+                    headers: {
+                        authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    success: function (response) {
+                        alert(response['msg'])
+                        window.location.replace('/')
+                    }
+                })
+            }
+        }
+
+        // 댓글 작성
+        function postComment() {
+            let content = $('#comment').val()
+            if (content === ' ') return alert('댓글을 작성해 주세요. (공백X)')
+
+            $.ajax({
+                type: 'POST',
+                url: `post/${post_id}/comment`,
+                data: {
+                    content,
+                },
+                headers: {
+                    authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                success: function (response) {
+                    alert(response['msg'])
+                    window.location.reload()
+                }
+            })
+        }
+
+        // 작성된 댓글 보여주기
+        function showComment() {
+            $.ajax({
+                type: 'GET',
+                url: `/post/${post_id}/comment`,
+                data: {},
+                headers: {
+                    authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                success: function (response) {
+                    let login_user_email = response['login_user_email']['user_email']
+                    let comments = response['comments']
+                    for (let i = 0; i < comments.length; i++) {
+                        let content = comments[i]['comment']['content']
+                        let author = comments[i]['email']
+                        let comment_id = comments[i]['comment']['comment_id']
+                        let temp_html = ``
+
+                        if (author === login_user_email) {
+                            temp_html = `<div class="comment-content">
+                                            <p>${author} || ${content} ||<span id="auth">
+                                            <div>
+                                                <button onclick="editComment(${comment_id})">수정</button> / <button onclick="deleteComment(${comment_id})">삭제</button>
+                                            </div>
+                                        </div>`
+                        } else if (author !== login_user_email) {
+                            temp_html = `<div class="comment-content">
+                                            <p>${author} || ${content} ||<span id="auth">
+                                            <div style="display: none">
+                                                <button onclick="editComment(${comment_id})">수정</button> / <button onclick="deleteComment(${comment_id})">삭제</button>
+                                            </div>
+                                        </div>`
+                        }
+
+                        $('#comment-box').append(temp_html)
+                    }
+                }
+            })
+        }
+
+        // 댓글 수정
+        function editComment(comment_id) {
+            let content = prompt('수정내용')
+
+            if (content === '') {
+                return alert('공백xxxx')
+            }
+
+            if (content !== null) {
+                $.ajax({
+                    type: 'PUT',
+                    url: `/post/${post_id}/comment/${comment_id}`,
+                    data: {
+                        content: content
+                    },
+                    headers: {
+                        authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    success: function (response) {
+                        alert(response['msg'])
+                        window.location.reload()
+                    }
+                })
+            }
+        }
+
+        // 댓글 삭제
+        function deleteComment(comment_id) {
+            if (confirm('삭제하시겠습니까?')) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `/post/${post_id}/comment/${comment_id}`,
+                    data: {},
+                    headers: {
+                        authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                    success: function (response) {
+                        alert(response['msg'])
+                        window.location.reload()
+                    }
+                })
+            }
+        }
+
+    </script>
+</head>
+<body>
+<div class="box">
+    <div id="content-box">
+    </div>
+    <hr>
+    <div class="comment-box" id="comment-box">
+        <div class="comment-content">
+            <p>작성자 || 댓글 내용 || 수정 아이콘 / 삭제 아이콘</p>
+        </div>
+    </div>
+    <hr>
+    <div class="comment-btn">
+        <input class="input is-link" id="comment" type="text" placeholder="댓글을 작성해주세요." onclick="checkLogin()">
+        <button class="button is-link" onclick="postComment()">작성</button>
+    </div>
+</div>
+
+</body>
+</html>

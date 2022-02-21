@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>main</title>
+    <!-- JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            showPosts()
+            if (localStorage.getItem('token') !== null) {
+                $('#login').hide()
+                $('#join').hide()
+            } else if (localStorage.getItem('token') === null) {
+                $('#write').hide()
+                $('#logout').hide()
+                $('#profile').hide()
+            }
+        })
+
+        function showPosts() {
+            // GET API
+            $.ajax({
+                type: "GET",
+                url: "/post",
+                success: function (response) { // 성공하면
+                    let posts = response['posts']
+                    for (let i = 0; i < posts.length; i++) {
+                        let post_id = posts[i]['post']['post_id']
+                        let title = posts[i]['post']['title']
+                        let img_url = posts[i]['post']['img_url']
+                        let email = posts[i]['email']
+
+                        let temp_html = `<div class="card">
+                                            <div class="card-content">
+                                                <div class="content">
+                                                    <p><a href="/detail.html?post_id=${post_id}"><img src="${img_url}"></a></p>
+                                                        <h1>제목 : ${title}</h1>
+                                                        <p>작성자 :  ${email}</p>
+                                                        <hr>
+                                                </div>
+                                            </div>
+                                        </div>`
+                        $('#content-box').append(temp_html)
+                    }
+                },
+            })
+        }
+
+        function signOut() {
+            localStorage.clear()
+            alert('로그아웃!')
+            window.location.reload()
+        }
+    </script>
+</head>
+<body>
+<a href="login.html" id="login">로그인</a>
+<a href="join.html" id="join">회원가입</a>
+<a href="write.html" id="write">글쓰기</a>
+<a href="profile.html" id="profile">개인정보</a>
+<button onclick="signOut()" id="logout">로그아웃</button>
+
+<!--  게시판 글  -->
+<div class="content">
+    <div class="content-box" id="content-box">
+
+    </div>
+</div>
+</body>
+</html>
